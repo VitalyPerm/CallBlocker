@@ -58,7 +58,10 @@ object ContactsStorage {
     private fun loadBlockedCalls(context: Context): List<BlockedCall> {
         val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(BLOCKED_CALLS_KEY, null)
-        return json?.let { gson.fromJson(it, blockedCallsType) } ?: emptyList()
+        val calls: List<BlockedCall> =
+            json?.let { gson.fromJson(it, blockedCallsType) } ?: emptyList()
+        val sortedCalls = calls.sortedByDescending { it.date }
+        return sortedCalls
     }
 
     fun addBlockedCall(context: Context, call: BlockedCall) {
