@@ -36,6 +36,9 @@ object ContactsStorage {
         val calls = loadBlockedCalls(context)
         blockedCallsFlow.value = calls
         val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+        val isEnable = prefs.getBoolean(IS_BLOCKING_ENABLE_KEY, true)
+        blockedCallsEnableFlow.value = isEnable
+        
         prefs.registerOnSharedPreferenceChangeListener { prefs, key ->
             if (key == BLOCKED_CALLS_KEY) {
                 val calls = loadBlockedCalls(context)

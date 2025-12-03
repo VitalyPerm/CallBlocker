@@ -6,24 +6,37 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
@@ -40,52 +53,113 @@ private val dateTimeFormatter = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.g
 @Composable
 fun Main(modifier: Modifier = Modifier) {
     val blockedCalls by ContactsStorage.blockedCallsFlow.collectAsState()
+    val isBlockingEnable by ContactsStorage.blockedCallsEnableFlow.collectAsState()
     val context = LocalContext.current
     val clipboard =
         remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
 
-    Column(
-        modifier
+    Box(
+        modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF1a2980), // тёмно-синий
+                        Color(0xFF26d0ce)  // бирюзовый
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+                )
+            )
     ) {
-        Text(
-            "Заблокированные номера",
-            fontStyle = FontStyle.Italic,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center,
-            fontSize = 20.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-        )
-        blockedCalls.onEach { call ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+        Column(
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+        ) {
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                ),
+                title = {
+                    val text = if (isBlockingEnable) {
+                        "Блокировка включена"
+                    } else {
+                        "Блокировка выключена"
+                    }
+                    Text(text)
+                },
+                actions = {
+                    val icon = if (isBlockingEnable) {
+                        Icons.Default.Done
+                    } else {
+                        Icons.Default.Close
+                    }
+
+                    IconButton(
+                        onClick = { ContactsStorage.changeIsBlockingEnable(context) }
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = Color.Red
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .drawBehind {
+                        drawLine(
+                            color = Color.Red,
+                            start = Offset(0f,size.height),
+                            end = Offset(size.width, size.height),
+                            strokeWidth = density * 3f
+                        )
+                    }
+            )
+            Text(
+                "Заблокированные номера",
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                color = Color.White,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
-                    .border(5.dp, Color.Red)
-                    .clickable {
-                        clipboard.setPrimaryClip(
-                            ClipData.newPlainText(
-                                "Заблокированный номер",
-                                call.phone ?: ""
+                    .padding(20.dp)
+            )
+            blockedCalls.onEach { call ->
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .border(5.dp, Color.White)
+                        .clickable {
+                            clipboard.setPrimaryClip(
+                                ClipData.newPlainText(
+                                    "Заблокированный номер",
+                                    call.phone ?: ""
+                                )
                             )
-                        )
-                        Toast.makeText(context, "Номер скопирован", Toast.LENGTH_SHORT).show()
-                    }
-            ) {
-                Text(
-                    call.phone ?: "",
-                    modifier = Modifier
-                        .padding(16.dp)
-                )
-                Text(
-                    dateTimeFormatter.format(call.date),
-                    modifier = Modifier
-                        .padding(16.dp)
-                )
+                            Toast.makeText(context, "Номер скопирован", Toast.LENGTH_SHORT).show()
+                        }
+                ) {
+                    Text(
+                        call.phone ?: "",
+                        color = Color.White,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 22.sp,
+                        modifier = Modifier
+                            .padding(16.dp)
+                    )
+                    Text(
+                        dateTimeFormatter.format(call.date),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(16.dp)
+                    )
+                }
             }
         }
     }
@@ -120,6 +194,7 @@ fun AppNotSetAsCallBlockerView(
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
             fontSize = 20.sp,
+            color = Color.White,
             modifier = Modifier
                 .padding(20.dp)
         )
@@ -184,6 +259,7 @@ private fun PermissionButton(
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
             fontSize = 18.sp,
+            color = Color.White,
             modifier = Modifier
                 .padding(16.dp)
         )

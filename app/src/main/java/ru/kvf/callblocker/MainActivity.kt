@@ -12,24 +12,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import ru.kvf.callblocker.data.Contact
@@ -71,50 +61,14 @@ class MainActivity : ComponentActivity() {
         init()
         enableEdgeToEdge()
         setContent {
-            val isBlockingEnable by ContactsStorage.blockedCallsEnableFlow.collectAsState()
-
             CallBlockerTheme {
-                Scaffold(
+                Box(
                     modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        if (isAllOtherPermissionsGranted) {
-                            TopAppBar(
-                                title = {
-                                    val text = if (isBlockingEnable) {
-                                        "Блокировка включена"
-                                    } else {
-                                        "Блокировка выключена"
-                                    }
-                                    Text(text)
-                                },
-                                actions = {
-                                    val icon = if (isBlockingEnable) {
-                                        Icons.Default.Done
-                                    } else {
-                                        Icons.Default.Close
-                                    }
-
-                                    IconButton(
-                                        onClick = { ContactsStorage.changeIsBlockingEnable(this@MainActivity) }
-                                    ) {
-                                        Icon(
-                                            imageVector = icon,
-                                            contentDescription = null,
-                                            tint = Color.Red
-                                        )
-                                    }
-                                }
-                            )
-                        }
-                    }
-                ) { innerPadding ->
-                    val modifier = Modifier
-                        .padding(innerPadding)
+                ) {
                     if (isAllOtherPermissionsGranted) {
-                        Main(modifier)
+                        Main()
                     } else {
                         AppNotSetAsCallBlockerView(
-                            modifier = modifier,
                             isSomePermissionBlockedBySystem = isSomePermissionBlockedBySystem,
                             onSettingsClick = ::openAppSettings,
                             onSetAsBlockAppClick = ::checkAppSetAsCallBlocker,
