@@ -40,6 +40,10 @@ fun AppNotSetAsCallBlockerView(
     askNotificationPermission: () -> Unit,
     isContactsPermissionGranted: Boolean,
     askContactsPermission: () -> Unit,
+    isCallListPermissionGranted: Boolean,
+    askCallListPermission: () -> Unit,
+    isPhoneStatePermissionGranted: Boolean,
+    askPhoneStatePermission: () -> Unit,
 ) {
 
     Column(
@@ -82,6 +86,20 @@ fun AppNotSetAsCallBlockerView(
             PermissionButton(
                 onClick = askContactsPermission,
                 title = "Контакты"
+            )
+        }
+
+        if (!isCallListPermissionGranted) {
+            PermissionButton(
+                onClick = askCallListPermission,
+                title = "Список звонков"
+            )
+        }
+
+        if (!isPhoneStatePermissionGranted) {
+            PermissionButton(
+                onClick = askPhoneStatePermission,
+                title = "Перехват звонков"
             )
         }
     }

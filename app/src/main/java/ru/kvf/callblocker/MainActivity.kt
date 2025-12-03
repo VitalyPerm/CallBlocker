@@ -4,7 +4,6 @@ import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
@@ -21,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import ru.kvf.callblocker.ui.AppNotSetAsCallBlockerView
 import ru.kvf.callblocker.ui.Main
 import ru.kvf.callblocker.ui.theme.CallBlockerTheme
@@ -31,12 +31,21 @@ private const val NOTIFICATION_PERMISSION_CODE = 100
 private const val CONTACTS_PERMISSION = android.Manifest.permission.READ_CONTACTS
 private const val CONTACTS_PERMISSION_CODE = 101
 
+private const val CALL_LIST_PERMISSION = android.Manifest.permission.READ_CALL_LOG
+private const val CALL_LIST_PERMISSION_CODE = 102
+
+private const val PHONE_STATE_PERMISSION = android.Manifest.permission.READ_PHONE_STATE
+private const val PHONE_STATE_PERMISSION_CODE = 103
+
 class MainActivity : ComponentActivity() {
     private var isAppSetAsCallBlocker by mutableStateOf(false)
     private var isNotificationPermissionGranted by mutableStateOf(false)
     private var isContactsPermissionGranted by mutableStateOf(false)
+    private var isCallListPermissionGranted by mutableStateOf(false)
+    private var isPhoneStatePermissionGranted by mutableStateOf(false)
     private val isAllOtherPermissionsGranted by derivedStateOf {
         isAppSetAsCallBlocker && isNotificationPermissionGranted && isContactsPermissionGranted
+                && isCallListPermissionGranted && isPhoneStatePermissionGranted
     }
 
     private var isSomePermissionBlockedBySystem by mutableStateOf(false)
@@ -78,6 +87,20 @@ class MainActivity : ComponentActivity() {
                                     CONTACTS_PERMISSION,
                                     CONTACTS_PERMISSION_CODE
                                 )
+                            },
+                            isCallListPermissionGranted = isCallListPermissionGranted,
+                            askCallListPermission = {
+                                requestPermission(
+                                    CALL_LIST_PERMISSION,
+                                    CALL_LIST_PERMISSION_CODE
+                                )
+                            },
+                            isPhoneStatePermissionGranted = isPhoneStatePermissionGranted,
+                            askPhoneStatePermission = {
+                                requestPermission(
+                                    PHONE_STATE_PERMISSION,
+                                    PHONE_STATE_PERMISSION_CODE,
+                                )
                             }
                         )
                     }
@@ -103,6 +126,8 @@ class MainActivity : ComponentActivity() {
         when (requestCode) {
             NOTIFICATION_PERMISSION_CODE -> isNotificationPermissionGranted = true
             CONTACTS_PERMISSION_CODE -> isContactsPermissionGranted = true
+            CALL_LIST_PERMISSION_CODE -> isCallListPermissionGranted = true
+            PHONE_STATE_PERMISSION_CODE -> isPhoneStatePermissionGranted = true
         }
     }
 
@@ -118,13 +143,14 @@ class MainActivity : ComponentActivity() {
         isNotificationPermissionGranted =
             checkPermission(NOTIFICATION_PERMISSION)
         isContactsPermissionGranted = checkPermission(CONTACTS_PERMISSION)
+        isCallListPermissionGranted = checkPermission(CALL_LIST_PERMISSION)
+        isPhoneStatePermissionGranted = checkPermission(PHONE_STATE_PERMISSION)
     }
 
-    private fun requestPermission(permission: String, requestCode: Int) {
-        requestPermissions(
-            arrayOf(permission), requestCode
-        )
-    }
+    private fun requestPermission(permission: String, requestCode: Int) = requestPermissions(
+        arrayOf(permission), requestCode
+    )
+
 
     private fun checkPermission(permission: String): Boolean = ContextCompat.checkSelfPermission(
         this,
@@ -138,7 +164,7 @@ class MainActivity : ComponentActivity() {
 
     private fun openAppSettings() {
         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = Uri.parse("package:${packageName}")
+            data = "package:${packageName}".toUri()
         }
         startActivity(intent)
     }
