@@ -2,23 +2,20 @@ package ru.kvf.callblocker
 
 import android.telecom.Call
 import android.telecom.CallScreeningService
-import android.util.Log
+import ru.kvf.callblocker.data.BlockedCall
+import ru.kvf.callblocker.data.ContactsStorage
 
 class MyCallScreeningService : CallScreeningService() {
 
-    override fun onCreate() {
-        super.onCreate()
-        Log.d("check___", "MyCallScreeningService serviceRunning")
-    }
-
     override fun onScreenCall(callDetails: Call.Details) {
         val number = callDetails.handle?.schemeSpecificPart
-        val isAllowed = isNumberAllowed(number)
-
-        Log.d("check___", "$number $isAllowed")
+        val filteredNumber = number.filterNumber()
+        val isAllowed = isNumberAllowed(filteredNumber)
+        if (!isAllowed) {
+            ContactsStorage.addBlockedCall(this, BlockedCall(phone = filteredNumber))
+        }
 
         if (callDetails.callDirection == Call.Details.DIRECTION_INCOMING) {
-            Log.d("check___", "callDetails.callDirection == Call.Details.DIRECTION_INCOMING")
             val response = CallResponse.Builder()
                 .setDisallowCall(!isAllowed)
                 .setRejectCall(!isAllowed)
@@ -28,8 +25,9 @@ class MyCallScreeningService : CallScreeningService() {
     }
 
     private fun isNumberAllowed(number: String?): Boolean {
-        val allowList = setOf("+79197102196")
-
-        return number in allowList
+        val phonesList = ContactsStorage.loadContactPhones(this)
+        return number in phonesList
     }
 }
+
+fun String?.filterNumber(): String? = this?.replace(Regex("[^+\\d]"), "")

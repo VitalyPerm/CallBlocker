@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.provider.ContactsContract
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,8 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import ru.kvf.callblocker.ui.AppNotSetAsCallBlockerView
-import ru.kvf.callblocker.ui.Main
+import ru.kvf.callblocker.data.Contact
+import ru.kvf.callblocker.data.ContactsStorage
 import ru.kvf.callblocker.ui.theme.CallBlockerTheme
 
 private const val NOTIFICATION_PERMISSION = android.Manifest.permission.POST_NOTIFICATIONS
@@ -125,7 +126,11 @@ class MainActivity : ComponentActivity() {
 
         when (requestCode) {
             NOTIFICATION_PERMISSION_CODE -> isNotificationPermissionGranted = true
-            CONTACTS_PERMISSION_CODE -> isContactsPermissionGranted = true
+            CONTACTS_PERMISSION_CODE -> {
+                isContactsPermissionGranted = true
+                loadContactPhones()
+            }
+
             CALL_LIST_PERMISSION_CODE -> isCallListPermissionGranted = true
             PHONE_STATE_PERMISSION_CODE -> isPhoneStatePermissionGranted = true
         }
@@ -145,6 +150,8 @@ class MainActivity : ComponentActivity() {
         isContactsPermissionGranted = checkPermission(CONTACTS_PERMISSION)
         isCallListPermissionGranted = checkPermission(CALL_LIST_PERMISSION)
         isPhoneStatePermissionGranted = checkPermission(PHONE_STATE_PERMISSION)
+
+        if (isContactsPermissionGranted) loadContactPhones()
     }
 
     private fun requestPermission(permission: String, requestCode: Int) = requestPermissions(
@@ -167,6 +174,40 @@ class MainActivity : ComponentActivity() {
             data = "package:${packageName}".toUri()
         }
         startActivity(intent)
+    }
+
+    private fun loadContactPhones() {
+        val contacts = mutableListOf<Contact>()
+
+        val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER
+        )
+
+        val resolver = contentResolver
+        val cursor = resolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            projection,
+            null,
+            null,
+            null
+        )
+
+        cursor?.use {
+            val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+            val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+
+            while (it.moveToNext()) {
+                val name = it.getString(nameIndex)
+                val number = it.getString(numberIndex).filterNumber()
+
+                if (!number.isNullOrBlank()) {
+                    contacts.add(Contact(name, number))
+                }
+            }
+        }
+
+        ContactsStorage.saveContacts(this, contacts)
     }
 }
 
