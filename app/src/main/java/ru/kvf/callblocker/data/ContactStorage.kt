@@ -19,8 +19,10 @@ object ContactsStorage {
     private const val APP_PREFS_NAME = "app_prefs"
     private const val CONTACTS_KEY = "contacts_key"
     private const val BLOCKED_CALLS_KEY = "blocked_calls_key"
+    private const val IS_BLOCKING_ENABLE_KEY = "is_blocking_enable_key"
 
     val blockedCallsFlow = MutableStateFlow<List<BlockedCall>>(emptyList())
+    val blockedCallsEnableFlow = MutableStateFlow(true)
 
     val gson: Gson by lazy {
         GsonBuilder()
@@ -35,9 +37,13 @@ object ContactsStorage {
         blockedCallsFlow.value = calls
         val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
         prefs.registerOnSharedPreferenceChangeListener { prefs, key ->
-            if (key != BLOCKED_CALLS_KEY) return@registerOnSharedPreferenceChangeListener
-            val calls = loadBlockedCalls(context)
-            blockedCallsFlow.value = calls
+            if (key == BLOCKED_CALLS_KEY) {
+                val calls = loadBlockedCalls(context)
+                blockedCallsFlow.value = calls
+            } else if (key == IS_BLOCKING_ENABLE_KEY) {
+                val isEnable = prefs.getBoolean(IS_BLOCKING_ENABLE_KEY, true)
+                blockedCallsEnableFlow.value = isEnable
+            }
         }
     }
 
@@ -70,6 +76,14 @@ object ContactsStorage {
         val json = gson.toJson(calls)
         val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit { putString(BLOCKED_CALLS_KEY, json) }
+    }
+
+    fun changeIsBlockingEnable(context: Context) {
+        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+        val currentValue = prefs.getBoolean(IS_BLOCKING_ENABLE_KEY, true)
+        prefs.edit {
+            putBoolean(IS_BLOCKING_ENABLE_KEY, !currentValue)
+        }
     }
 }
 
