@@ -50,6 +50,14 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 private val dateTimeFormatter = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
+private val appBackground = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF1a2980),
+        Color(0xFF26d0ce)
+    ),
+    start = Offset(0f, 0f),
+    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
+)
 
 @Composable
 fun Main(modifier: Modifier = Modifier) {
@@ -75,16 +83,7 @@ fun Main(modifier: Modifier = Modifier) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFF1a2980), // тёмно-синий
-                        Color(0xFF26d0ce)  // бирюзовый
-                    ),
-                    start = Offset(0f, 0f),
-                    end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY)
-                )
-            )
+            .background(appBackground)
     ) {
         Column(
             modifier
@@ -191,68 +190,64 @@ fun AppNotSetAsCallBlockerView(
     askNotificationPermission: () -> Unit,
     isContactsPermissionGranted: Boolean,
     askContactsPermission: () -> Unit,
-    isCallListPermissionGranted: Boolean,
-    askCallListPermission: () -> Unit,
     isPhoneStatePermissionGranted: Boolean,
     askPhoneStatePermission: () -> Unit,
 ) {
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
         modifier = modifier
             .fillMaxSize()
+            .background(appBackground)
     ) {
-        Text(
-            "Дай необходимые разрешения",
-            fontStyle = FontStyle.Italic,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center,
-            fontSize = 20.sp,
-            color = Color.White,
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .padding(20.dp)
-        )
-        if (isSomePermissionBlockedBySystem) {
-            PermissionButton(
-                onClick = onSettingsClick,
-                title = "Дай разрешения через настройки"
+                .fillMaxSize()
+        ) {
+            Text(
+                "Дай необходимые разрешения",
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+                fontSize = 20.sp,
+                color = Color.White,
+                modifier = Modifier
+                    .padding(20.dp)
             )
-        }
-        if (!isAppSetAsCallBlocker) {
-            PermissionButton(
-                onClick = onSetAsBlockAppClick,
-                title = "Установи приложение блокровщиком звонком по умолчанию"
-            )
-        }
+            if (isSomePermissionBlockedBySystem) {
+                PermissionButton(
+                    onClick = onSettingsClick,
+                    title = "Дай разрешения через настройки"
+                )
+            }
+            if (!isAppSetAsCallBlocker) {
+                PermissionButton(
+                    onClick = onSetAsBlockAppClick,
+                    title = "Установи приложение блокровщиком звонком по умолчанию"
+                )
+            }
 
-        if (!isNotificationPermissionGranted) {
-            PermissionButton(
-                onClick = askNotificationPermission,
-                title = "Уведомления"
-            )
-        }
+            if (!isNotificationPermissionGranted) {
+                PermissionButton(
+                    onClick = askNotificationPermission,
+                    title = "Уведомления"
+                )
+            }
 
 
-        if (!isContactsPermissionGranted) {
-            PermissionButton(
-                onClick = askContactsPermission,
-                title = "Контакты"
-            )
-        }
+            if (!isContactsPermissionGranted) {
+                PermissionButton(
+                    onClick = askContactsPermission,
+                    title = "Контакты"
+                )
+            }
 
-        if (!isCallListPermissionGranted) {
-            PermissionButton(
-                onClick = askCallListPermission,
-                title = "Список звонков"
-            )
-        }
-
-        if (!isPhoneStatePermissionGranted) {
-            PermissionButton(
-                onClick = askPhoneStatePermission,
-                title = "Перехват звонков"
-            )
+            if (!isPhoneStatePermissionGranted) {
+                PermissionButton(
+                    onClick = askPhoneStatePermission,
+                    title = "Перехват звонков"
+                )
+            }
         }
     }
 }
@@ -274,7 +269,7 @@ private fun PermissionButton(
             fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
             fontSize = 18.sp,
-            color = Color.White,
+            color = Color.Red,
             modifier = Modifier
                 .padding(16.dp)
         )

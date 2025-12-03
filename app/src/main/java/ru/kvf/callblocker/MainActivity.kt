@@ -32,21 +32,17 @@ private const val NOTIFICATION_PERMISSION_CODE = 100
 private const val CONTACTS_PERMISSION = android.Manifest.permission.READ_CONTACTS
 private const val CONTACTS_PERMISSION_CODE = 101
 
-private const val CALL_LIST_PERMISSION = android.Manifest.permission.READ_CALL_LOG
-private const val CALL_LIST_PERMISSION_CODE = 102
-
 private const val PHONE_STATE_PERMISSION = android.Manifest.permission.READ_PHONE_STATE
-private const val PHONE_STATE_PERMISSION_CODE = 103
+private const val PHONE_STATE_PERMISSION_CODE = 102
 
 class MainActivity : ComponentActivity() {
     private var isAppSetAsCallBlocker by mutableStateOf(false)
     private var isNotificationPermissionGranted by mutableStateOf(false)
     private var isContactsPermissionGranted by mutableStateOf(false)
-    private var isCallListPermissionGranted by mutableStateOf(false)
     private var isPhoneStatePermissionGranted by mutableStateOf(false)
     private val isAllOtherPermissionsGranted by derivedStateOf {
         isAppSetAsCallBlocker && isNotificationPermissionGranted && isContactsPermissionGranted
-                && isCallListPermissionGranted && isPhoneStatePermissionGranted
+                && isPhoneStatePermissionGranted
     }
 
     private var isSomePermissionBlockedBySystem by mutableStateOf(false)
@@ -87,13 +83,6 @@ class MainActivity : ComponentActivity() {
                                     CONTACTS_PERMISSION_CODE
                                 )
                             },
-                            isCallListPermissionGranted = isCallListPermissionGranted,
-                            askCallListPermission = {
-                                requestPermission(
-                                    CALL_LIST_PERMISSION,
-                                    CALL_LIST_PERMISSION_CODE
-                                )
-                            },
                             isPhoneStatePermissionGranted = isPhoneStatePermissionGranted,
                             askPhoneStatePermission = {
                                 requestPermission(
@@ -129,13 +118,12 @@ class MainActivity : ComponentActivity() {
                 loadContactPhones()
             }
 
-            CALL_LIST_PERMISSION_CODE -> isCallListPermissionGranted = true
             PHONE_STATE_PERMISSION_CODE -> isPhoneStatePermissionGranted = true
         }
     }
 
     private fun init() {
-        roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
+        roleManager = getSystemService(ROLE_SERVICE) as RoleManager
         requestRoleLauncher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
                 val granted = it.resultCode == -1
@@ -146,7 +134,6 @@ class MainActivity : ComponentActivity() {
         isNotificationPermissionGranted =
             checkPermission(NOTIFICATION_PERMISSION)
         isContactsPermissionGranted = checkPermission(CONTACTS_PERMISSION)
-        isCallListPermissionGranted = checkPermission(CALL_LIST_PERMISSION)
         isPhoneStatePermissionGranted = checkPermission(PHONE_STATE_PERMISSION)
 
         if (isContactsPermissionGranted) loadContactPhones()
