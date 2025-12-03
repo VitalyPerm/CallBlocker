@@ -29,12 +29,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -57,6 +58,19 @@ fun Main(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val clipboard =
         remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
+    val scrollState = rememberScrollState()
+    val appBarAlpha by remember {
+        derivedStateOf {
+            val offset = scrollState.value.toFloat()
+            if (offset <= 0) {
+                1f
+            } else if (offset >= 100) {
+                0f
+            } else {
+                1f - (offset / 100f)
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -75,7 +89,7 @@ fun Main(modifier: Modifier = Modifier) {
         Column(
             modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
         ) {
             TopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -107,10 +121,11 @@ fun Main(modifier: Modifier = Modifier) {
                     }
                 },
                 modifier = Modifier
+                    .alpha(appBarAlpha)
                     .drawBehind {
                         drawLine(
                             color = Color.Red,
-                            start = Offset(0f,size.height),
+                            start = Offset(0f, size.height),
                             end = Offset(size.width, size.height),
                             strokeWidth = density * 3f
                         )
