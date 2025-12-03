@@ -10,6 +10,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.lang.reflect.Type
 import java.util.Date
 
@@ -19,6 +20,8 @@ object ContactsStorage {
     private const val CONTACTS_KEY = "contacts_key"
     private const val BLOCKED_CALLS_KEY = "blocked_calls_key"
 
+    val blockedCallsFlow = MutableStateFlow<List<BlockedCall>>(emptyList())
+
     val gson: Gson by lazy {
         GsonBuilder()
             .registerTypeAdapter(Date::class.java, DateConverter())
@@ -26,6 +29,17 @@ object ContactsStorage {
     }
     private val contactListType = object : TypeToken<List<Contact>>() {}.type
     private val blockedCallsType = object : TypeToken<List<BlockedCall>>() {}.type
+
+    fun subscribeToBlockedCalls(context: Context) {
+        val calls = loadBlockedCalls(context)
+        blockedCallsFlow.value = calls
+        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.registerOnSharedPreferenceChangeListener { prefs, key ->
+            if (key != BLOCKED_CALLS_KEY) return@registerOnSharedPreferenceChangeListener
+            val calls = loadBlockedCalls(context)
+            blockedCallsFlow.value = calls
+        }
+    }
 
     fun saveContacts(context: Context, contacts: List<Contact>) {
         val json = gson.toJson(contacts)
@@ -41,7 +55,7 @@ object ContactsStorage {
 
     fun loadContactPhones(context: Context) = loadContacts(context).map { it.phone }
 
-    fun loadBlockedCalls(context: Context): List<BlockedCall> {
+    private fun loadBlockedCalls(context: Context): List<BlockedCall> {
         val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(BLOCKED_CALLS_KEY, null)
         return json?.let { gson.fromJson(it, blockedCallsType) } ?: emptyList()
