@@ -20,7 +20,7 @@ class MyCallScreeningService : CallScreeningService() {
     }
 
     override fun onScreenCall(callDetails: Call.Details) {
-        val isBlockingEnable = ContactsStorage.blockedCallsEnableFlow.value
+        val isBlockingEnable = ContactsStorage.getIsBlockingEnable(this)
         if (!isBlockingEnable) {
             respondToCall(callDetails, CallResponse.Builder().build())
             return

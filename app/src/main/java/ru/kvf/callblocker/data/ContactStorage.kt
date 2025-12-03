@@ -33,12 +33,10 @@ object ContactsStorage {
     private val blockedCallsType = object : TypeToken<List<BlockedCall>>() {}.type
 
     fun subscribeToBlockedCalls(context: Context) {
-        val calls = loadBlockedCalls(context)
-        blockedCallsFlow.value = calls
+        blockedCallsFlow.value = loadBlockedCalls(context)
+        blockedCallsEnableFlow.value = getIsBlockingEnable(context)
         val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
-        val isEnable = prefs.getBoolean(IS_BLOCKING_ENABLE_KEY, true)
-        blockedCallsEnableFlow.value = isEnable
-        
+
         prefs.registerOnSharedPreferenceChangeListener { prefs, key ->
             if (key == BLOCKED_CALLS_KEY) {
                 val calls = loadBlockedCalls(context)
@@ -83,10 +81,16 @@ object ContactsStorage {
 
     fun changeIsBlockingEnable(context: Context) {
         val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
-        val currentValue = prefs.getBoolean(IS_BLOCKING_ENABLE_KEY, true)
+        val currentValue = getIsBlockingEnable(context)
         prefs.edit {
             putBoolean(IS_BLOCKING_ENABLE_KEY, !currentValue)
         }
+    }
+
+    fun getIsBlockingEnable(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+        val isEnable = prefs.getBoolean(IS_BLOCKING_ENABLE_KEY, true)
+        return isEnable
     }
 }
 
