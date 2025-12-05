@@ -6,7 +6,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -50,7 +49,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 private val dateTimeFormatter = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
-private val appBackground = Brush.linearGradient(
+val appBackground = Brush.linearGradient(
     colors = listOf(
         Color(0xFF1a2980),
         Color(0xFF26d0ce)
@@ -83,7 +82,6 @@ fun Main(modifier: Modifier = Modifier) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(appBackground)
     ) {
         Column(
             modifier
@@ -100,7 +98,10 @@ fun Main(modifier: Modifier = Modifier) {
                     } else {
                         "Блокировка выключена"
                     }
-                    Text(text)
+                    Text(
+                        text,
+                        color = Color.White,
+                    )
                 },
                 actions = {
                     val icon = if (isBlockingEnable) {
@@ -196,7 +197,6 @@ fun AppNotSetAsCallBlockerView(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(appBackground)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
