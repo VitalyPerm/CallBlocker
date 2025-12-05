@@ -11,6 +11,7 @@ import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.MutableStateFlow
+import ru.kvf.callblocker.App
 import java.lang.reflect.Type
 import java.util.Date
 
@@ -32,14 +33,18 @@ object ContactsStorage {
     private val contactListType = object : TypeToken<List<Contact>>() {}.type
     private val blockedCallsType = object : TypeToken<List<BlockedCall>>() {}.type
 
-    fun subscribeToBlockedCalls(context: Context) {
-        blockedCallsFlow.value = loadBlockedCalls(context)
-        blockedCallsEnableFlow.value = getIsBlockingEnable(context)
-        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+    init {
+        subscribeToBlockedCalls()
+    }
+
+    private fun subscribeToBlockedCalls() {
+        blockedCallsFlow.value = loadBlockedCalls()
+        blockedCallsEnableFlow.value = getIsBlockingEnable()
+        val prefs = App.INSTANCE.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
 
         prefs.registerOnSharedPreferenceChangeListener { prefs, key ->
             if (key == BLOCKED_CALLS_KEY) {
-                val calls = loadBlockedCalls(context)
+                val calls = loadBlockedCalls()
                 blockedCallsFlow.value = calls
             } else if (key == IS_BLOCKING_ENABLE_KEY) {
                 val isEnable = prefs.getBoolean(IS_BLOCKING_ENABLE_KEY, true)
@@ -48,22 +53,22 @@ object ContactsStorage {
         }
     }
 
-    fun saveContacts(context: Context, contacts: List<Contact>) {
+    fun saveContacts(contacts: List<Contact>) {
         val json = gson.toJson(contacts)
-        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = App.INSTANCE.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit { putString(CONTACTS_KEY, json) }
     }
 
-    fun loadContacts(context: Context): List<Contact> {
-        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+    fun loadContacts(): List<Contact> {
+        val prefs = App.INSTANCE.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(CONTACTS_KEY, null)
         return json?.let { gson.fromJson(it, contactListType) } ?: emptyList()
     }
 
-    fun loadContactPhones(context: Context) = loadContacts(context).map { it.phone }
+    fun loadContactPhones() = loadContacts().map { it.phone }
 
-    private fun loadBlockedCalls(context: Context): List<BlockedCall> {
-        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+    private fun loadBlockedCalls(): List<BlockedCall> {
+        val prefs = App.INSTANCE.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
         val json = prefs.getString(BLOCKED_CALLS_KEY, null)
         val calls: List<BlockedCall> =
             json?.let { gson.fromJson(it, blockedCallsType) } ?: emptyList()
@@ -71,24 +76,24 @@ object ContactsStorage {
         return sortedCalls
     }
 
-    fun addBlockedCall(context: Context, call: BlockedCall) {
-        val calls = loadBlockedCalls(context).toMutableList()
+    fun addBlockedCall(call: BlockedCall) {
+        val calls = loadBlockedCalls().toMutableList()
         calls.add(call)
         val json = gson.toJson(calls)
-        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = App.INSTANCE.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit { putString(BLOCKED_CALLS_KEY, json) }
     }
 
-    fun changeIsBlockingEnable(context: Context) {
-        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
-        val currentValue = getIsBlockingEnable(context)
+    fun changeIsBlockingEnable() {
+        val prefs = App.INSTANCE.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+        val currentValue = getIsBlockingEnable()
         prefs.edit {
             putBoolean(IS_BLOCKING_ENABLE_KEY, !currentValue)
         }
     }
 
-    fun getIsBlockingEnable(context: Context): Boolean {
-        val prefs = context.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
+    fun getIsBlockingEnable(): Boolean {
+        val prefs = App.INSTANCE.getSharedPreferences(APP_PREFS_NAME, Context.MODE_PRIVATE)
         val isEnable = prefs.getBoolean(IS_BLOCKING_ENABLE_KEY, true)
         return isEnable
     }

@@ -20,7 +20,7 @@ class MyCallScreeningService : CallScreeningService() {
     }
 
     override fun onScreenCall(callDetails: Call.Details) {
-        val isBlockingEnable = ContactsStorage.getIsBlockingEnable(this)
+        val isBlockingEnable = ContactsStorage.getIsBlockingEnable()
         if (!isBlockingEnable) {
             respondToCall(callDetails, CallResponse.Builder().build())
             return
@@ -30,7 +30,7 @@ class MyCallScreeningService : CallScreeningService() {
         val filteredNumber = number.filterNumber()
         val isAllowed = isNumberAllowed(filteredNumber)
         if (!isAllowed) {
-            ContactsStorage.addBlockedCall(this, BlockedCall(phone = filteredNumber))
+            ContactsStorage.addBlockedCall(BlockedCall(phone = filteredNumber))
             showBlockedCallNotification(filteredNumber)
         }
 
@@ -44,7 +44,7 @@ class MyCallScreeningService : CallScreeningService() {
     }
 
     private fun isNumberAllowed(number: String?): Boolean {
-        val phonesList = ContactsStorage.loadContactPhones(this)
+        val phonesList = ContactsStorage.loadContactPhones()
         return number in phonesList
     }
 

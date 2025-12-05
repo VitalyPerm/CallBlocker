@@ -111,7 +111,7 @@ fun Main(modifier: Modifier = Modifier) {
                     }
 
                     IconButton(
-                        onClick = { ContactsStorage.changeIsBlockingEnable(context) }
+                        onClick = { ContactsStorage.changeIsBlockingEnable() }
                     ) {
                         Icon(
                             imageVector = icon,

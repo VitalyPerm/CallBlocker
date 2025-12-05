@@ -164,8 +164,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun loadContactPhones() {
-        ContactsStorage.subscribeToBlockedCalls(this)
-
         val contacts = mutableListOf<Contact>()
 
         val projection = arrayOf(
@@ -196,7 +194,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        ContactsStorage.saveContacts(this, contacts)
+        ContactsStorage.saveContacts(contacts)
     }
 }
 
