@@ -186,11 +186,11 @@ class MainActivity : ComponentActivity() {
 
             while (it.moveToNext()) {
                 val name = it.getString(nameIndex)
-                val number = it.getString(numberIndex).filterNumber()
-
-                if (!number.isNullOrBlank()) {
-                    contacts.add(Contact(name, number))
+                val number = it.getString(numberIndex).filterNumber()?.run {
+                    if (startsWith("8")) "+7${substring(1)}" else this
                 }
+
+                if (!number.isNullOrBlank()) contacts.add(Contact(name, number))
             }
         }
 
