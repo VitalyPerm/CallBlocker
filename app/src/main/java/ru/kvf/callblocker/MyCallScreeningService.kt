@@ -14,15 +14,25 @@ private const val CALL_BLOCK_CHANNEL = "CALL_BLOCK_CHANNEL"
 
 class MyCallScreeningService : CallScreeningService() {
 
+    private val defaultCallResponse by lazy {
+        CallResponse.Builder().build()
+    }
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
     }
 
     override fun onScreenCall(callDetails: Call.Details) {
+        val isIncoming = callDetails.callDirection == Call.Details.DIRECTION_INCOMING
+        if (!isIncoming) {
+            respondToCall(callDetails, defaultCallResponse)
+            return
+        }
+
         val isBlockingEnable = ContactsStorage.getIsBlockingEnable()
         if (!isBlockingEnable) {
-            respondToCall(callDetails, CallResponse.Builder().build())
+            respondToCall(callDetails, defaultCallResponse)
             return
         }
 
@@ -34,13 +44,12 @@ class MyCallScreeningService : CallScreeningService() {
             showBlockedCallNotification(filteredNumber)
         }
 
-        if (callDetails.callDirection == Call.Details.DIRECTION_INCOMING) {
-            val response = CallResponse.Builder()
-                .setDisallowCall(!isAllowed)
-                .setRejectCall(!isAllowed)
-                .build()
-            respondToCall(callDetails, response)
-        }
+        val response = CallResponse.Builder()
+            .setDisallowCall(!isAllowed)
+            .setRejectCall(!isAllowed)
+            .build()
+
+        respondToCall(callDetails, response)
     }
 
     private fun isNumberAllowed(number: String?): Boolean {
